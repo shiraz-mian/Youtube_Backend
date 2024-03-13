@@ -18,13 +18,6 @@ const userSchema = new Schema({
         lowercase:true,
         trim:true,
     },
-    fullname:{
-        type:String,
-        required:true,
-        lowercase:true,
-        trim:true,
-        index:true
-    },
     fullName:{
         type:String,
         required:true,
@@ -46,7 +39,7 @@ const userSchema = new Schema({
         }
     ],
     password:{
-        tyoe:String,
+        type:String,
         required:[true,"Password is required"]
     },
     refreshToken:{
@@ -57,7 +50,7 @@ const userSchema = new Schema({
 
 userSchema.pre('save', async function(next){
     if(!this.isModified("password")) return next();
-    this.password = bcrpt.hash(this.password,10)
+    this.password = await bcrpt.hash(this.password,10)
     next()
 })
 

@@ -7,8 +7,14 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY, 
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
-const uploadOnClodinary = async (localFilePath)=>{
+// import {v2 as cloudinary} from 'cloudinary';
+          
+// cloudinary.config({ 
+//   cloud_name: 'dbhb64zza', 
+//   api_key: '136243371351729', 
+//   api_secret: 'JYH_g66GXJK4ikp-zbO2wF4o26g' 
+// });
+const uploadOnCloudinary = async (localFilePath)=>{
     try {
         if(!localFilePath) return null;
         //upload file on cloudinary
@@ -16,12 +22,14 @@ const uploadOnClodinary = async (localFilePath)=>{
             resource_type:"auto"
         })
         // file has been uploade successfullly
-        console.log("file is upoload successfully",response.url);
+        // console.log("file is upoload successfully",response.url);
+        fs.unlinkSync(localFilePath)
         return response;
     } catch (error) {
-        fs.unlinkSync(localFilePath)// remove the locally saved tempory file ass the operation get failde
+        // console.log("file is not uploaded")
+         fs.unlinkSync(localFilePath)// remove the locally saved tempory file ass the operation get failde
         return null;
     }
 }
 
-export {uploadOnClodinary}
+export {uploadOnCloudinary}
