@@ -1,6 +1,7 @@
 import mongoose,{Schema} from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrpt from "bcrypt"
+import { asyncHandler } from "../utils/asycHandler";
 
 const userSchema = new Schema({
     username:{
@@ -83,4 +84,5 @@ userSchema.methods.generateRefreshToken = function(){
         }
     )
 }
+
 export const User = mongoose.model("User",userSchema)
