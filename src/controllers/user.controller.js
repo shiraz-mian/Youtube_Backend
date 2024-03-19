@@ -49,7 +49,6 @@ const registerUser = asyncHandler(async (req,res)=>{
         throw new ApiError(409,"User Already Existed")
     }
     const avatarLocalPath =  req.files?.avatar[0]?.path;
-    //const coverImageLocalPath=  req.files?.coverImage[0]?.path;
     let coverImageLocalPath;
     if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0){
         coverImageLocalPath = req.files.coverImage[0].path;
@@ -65,9 +64,18 @@ const registerUser = asyncHandler(async (req,res)=>{
         throw new ApiError(409,"Avatar Already Existed")
 
     }
-    // console.log(coverImage)
-    // console.log(avatar)
-
+    const user = await User.create({
+        fullName,
+        avatar: avatar.url,
+        coverImage: coverImage?.url || "",
+        email, 
+        password,
+        username: username.toLowerCase()
+    })
+    const createdUser = await User.findById(user._id).select(
+        "-password,-refreshToken"
+    )
+    
    
     if(!createdUser){
         throw new ApiError(500,"Something went wrong while registring user")
@@ -116,8 +124,10 @@ const loginUser = asyncHandler(async (req,res) =>{
         httpOnly:true,
         secure:true
     }
-    return res.status(200).cookie("accessToken",accessToken,options).
-    cookie("refreshToken",refreshToken,options)
+    return res
+    .status(200)
+    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,options)
     .json(
         new ApiResponse(
             200,
@@ -135,8 +145,8 @@ const logoutUser = asyncHandler(async (req,res)=>{
     const user = await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set:{
-                refreshToken:undefined
+            $unset:{
+                refreshToken:1
             }
         },
         {
@@ -150,7 +160,7 @@ const logoutUser = asyncHandler(async (req,res)=>{
     return res.status(200)
     .clearCookie("accessToken",options)
     .clearCookie("refreshToken",options)
-    .json(new ApiResponse(200,{},"user Logout successfully"))
+    .json(new ApiResponse(200,user,"user Logout successfully"))
 })
 
 const refreshAccessToken = asyncHandler(async(req,res)=>{
@@ -218,7 +228,7 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
  const getCurrentuser = asyncHandler(async(req,res) =>{
     return res
         .status(200)
-        .json(200,req.user,"Current user fetch successfully")
+        .json(new ApiResponse(200,req.user,"Current user fetch successfully"))
  })
 
  const updateAccountDetails = asyncHandler(async(req,res)=>{
@@ -228,7 +238,7 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"All fields are requires")
     }
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set :{
@@ -306,7 +316,9 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
 
    const channel  = await User.aggregate([
     {
-        $match:username?.toLowerCase()
+        $match:{
+           username: username?.toLowerCase()
+        }
     },
     {
         $lookup:{
@@ -358,7 +370,6 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
    if (!channel?.length) {
         throw new ApiError(404,"channel does not exists")
    }
-   console.log(channel)
    
    return res
    .status(200)
@@ -372,7 +383,7 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
     const user = await User.aggregate([
         {
             $match:{
-                _id:  mongoose.Types.ObjectId(req.user._id)
+                _id:  new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
