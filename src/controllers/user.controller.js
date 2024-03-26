@@ -64,6 +64,7 @@ const registerUser = asyncHandler(async (req,res)=>{
         throw new ApiError(409,"Avatar Already Existed")
 
     }
+    console.log("cloudinary",coverImage)
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -370,7 +371,6 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
    if (!channel?.length) {
         throw new ApiError(404,"channel does not exists")
    }
-   
    return res
    .status(200)
    .json(
