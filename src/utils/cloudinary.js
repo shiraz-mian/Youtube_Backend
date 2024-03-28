@@ -32,4 +32,16 @@ const uploadOnCloudinary = async (localFilePath)=>{
     }
 }
 
-export {uploadOnCloudinary}
+const deletOnCloudinary = async (url) =>{
+    try {
+        const publicId = url.split('/').pop().split('.')[0];
+        const resourceType = url.includes('/image/') ? 'image' : 'video';
+
+        const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+        return result;
+    } catch (error) {
+        return null;
+    }
+}
+
+export {uploadOnCloudinary,deletOnCloudinary}

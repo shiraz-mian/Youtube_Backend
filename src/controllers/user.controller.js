@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asycHandler.js";
 import { ApiError } from "../utils/ApiErrors.js";
 import {User} from "../models/user.models.js"
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
+import {deletOnCloudinary, uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import  jwt  from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -234,7 +234,7 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
 
  const updateAccountDetails = asyncHandler(async(req,res)=>{
     const {fullName,email} = req.body
-
+    
     if(!fullName||!email){
         throw new ApiError(400,"All fields are requires")
     }
@@ -261,6 +261,8 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
     if(!avatarLocalPath){
         throw new ApiError(400,"Avatar file is missing")
     }
+    console.log(req.user.username)
+    await deletOnCloudinary(req.user.avatar)
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
     if(!avatar.url){
