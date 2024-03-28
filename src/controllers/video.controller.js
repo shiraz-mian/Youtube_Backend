@@ -8,7 +8,6 @@ import mongoose from "mongoose";
 
 const uploadVideo = asyncHandler(async (req,res) =>{
     const {title,description} = req.body;
-  
     if(
         [title,description].some((field)=> field?.trim === "") 
     )
@@ -44,10 +43,11 @@ const uploadVideo = asyncHandler(async (req,res) =>{
     thumbnail:thumbnail.url,
     title,
     description,
-    duration: videocloudinary?.duration
+    duration: videocloudinary?.duration,
+    owner:req.user._id
    })
-   
-   if(!video){
+   const createdVideo = await Video.findById(video._id)
+   if(!createdVideo){
     throw new ApiError(500,"Spmething went wrong while uploading a video")
    }
 
@@ -57,6 +57,22 @@ const uploadVideo = asyncHandler(async (req,res) =>{
 
 })
 
+const getVideoById = asyncHandler(async (req,res) =>{
+    const {videoId} = req.params;
+    if(!videoId) throw new ApiError(404, "video id is required")
+
+    const video = await Video.findById(videoId);
+
+    if(!video) throw new ApiError(404,"video not found")
+    video.views+=1;
+    await video.save({validateBeforeSave:false})
+
+    return res
+           .status(200)
+           .json(new ApiResponse(200,video,"video fetched successfully"))
+})
+
 export {
-    uploadVideo
+    uploadVideo,
+    getVideoById
 }
