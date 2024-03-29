@@ -6,6 +6,44 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import  jwt  from "jsonwebtoken";
 import mongoose from "mongoose";
 
+const getAllVideos = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
+    //TODO: get all videos based on query, sort, pagination
+    const pipeline = [];
+
+    if(userId){
+        pipeline.push({
+            $match:{
+                owner:new mongoose.Types.ObjectId(userId)
+            }
+        })
+    }
+    else throw new ApiError(404,"UserId is required")
+    if(query){
+        pipeline.push({
+            $match:{
+                $text:{
+                    $search:query
+                }
+            }
+        })
+    }
+
+    if (sortBy && sortType) {
+        const sortStage = {};
+        sortStage[sortBy] = sortType === 'asc' ? 1 : -1;
+        pipeline.push({ $sort: sortStage });
+       
+      }
+    // Pagination using page and limit parameters
+    const skip = (page - 1) * limit;
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit) });
+    const video = await Video.aggregate(pipeline);
+
+    return res.status(200).json(new ApiResponse(200,video,"get all videos"))
+
+})
 const uploadVideo = asyncHandler(async (req,res) =>{
     const {title,description} = req.body;
     if(
@@ -166,5 +204,6 @@ export {
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    getAllVideos
 }
