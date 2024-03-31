@@ -382,6 +382,7 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
  })
 
  const getWatchHistory =asyncHandler(async(req,res)=>{
+    
     const user = await User.aggregate([
         {
             $match:{
@@ -423,7 +424,7 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
             }
         }
     ])
-
+    console.log(user)
     return  res
             .status(200)
             .json(
