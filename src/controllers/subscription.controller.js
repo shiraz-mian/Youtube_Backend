@@ -35,11 +35,11 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-    const {channelId} = req.params
-    if(!isValidObjectId(channelId)){
+    const {subscriberId} = req.params
+    if(!isValidObjectId(subscriberId)){
         throw new ApiError(404,"invalid channel Id");
     }
-
+    
 
 })
 
@@ -51,12 +51,53 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         throw new ApiError(404,"invalid channel Id");
     }
 
-    const subscribed = await Subscription.find({
-       subscriber: channelId
-    });
-  console.log(subscribed)
-    return res.status(200).json(new ApiResponse(200,{subscribed},"list fetched succesfully"))
+    // const channelsubscribed = await Subscription.find({
+    //    subscriber: channelId
+    // });
+    // return res.status(200).json(new ApiResponse(200,channelsubscribed,"list fetched succesfully"))
+    const subscribersList = await Subscription.aggregate([
+        {
+            $match: {
+                channel: new mongoose.Types.ObjectId(channelId)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "subscriber",
+                foreignField: "_id",
+                as: "subscribers",
+                pipeline: [
+                    {
+                        $project: {
+                            fullName: 1,
+                            username: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        }, 
+        {
+            $unwind: "$subscribers"
+        },
+        {
+            $replaceRoot: {
+                newRoot: "$subscribers"
+            }
+        }
+    ])
 
+    if (!subscribersList?.length) {
+        throw new ApiError(404, "Subscribers not found")
+    }
+    console.log(subscribersList)
+    res
+    .status(200)
+    .json(new ApiResponse(200, {
+        channelId: channelId,
+        subscribersCount: subscribersList?.length,
+        subscribers: subscribersList}, "Subscribers list fetched successfully"))
 })
 
 export {
